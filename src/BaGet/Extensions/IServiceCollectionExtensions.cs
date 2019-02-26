@@ -16,6 +16,7 @@ using BaGet.Core.Server.Extensions;
 using BaGet.Core.Services;
 using BaGet.Entities;
 using BaGet.Protocol;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,7 +58,16 @@ namespace BaGet.Extensions
 
             services.AddStorageProviders();
             services.AddSearchProviders();
-            services.AddAuthenticationProviders();
+
+            //we need better naming to distingush api Key auth for publishing)
+            //and private feed auth 
+            services.AddAuthenticationProviders(); //API-Key
+
+            services.AddAuthentication("Basic")
+               .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null);
+
+
+            services.AddScoped<IUserService, UserService>(); //we need a userService
 
             return services;
         }
@@ -256,8 +266,7 @@ namespace BaGet.Extensions
 
         public static IServiceCollection AddAuthenticationProviders(this IServiceCollection services)
         {
-            services.AddTransient<IAuthenticationService, ApiKeyAuthenticationService>();
-
+            services.AddTransient<BaGet.Core.Services.IAuthenticationService, ApiKeyAuthenticationService>();
             return services;
         }
     }
