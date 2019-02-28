@@ -64,8 +64,9 @@ namespace BaGet.Extensions
             services.AddAuthenticationProviders(); //API-Key
 
             services.AddAuthentication("Basic")
-               .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null);
+               .AddScheme<BasicAuthenticationOptions, BasicAuthenticationHandler>("Basic", null);
 
+            services.AddSingleton<IPostConfigureOptions<BasicAuthenticationOptions>, BasicAuthenticationPostConfigureOptions>();
 
             services.AddScoped<IUserService, UserService>(); //we need a userService
 

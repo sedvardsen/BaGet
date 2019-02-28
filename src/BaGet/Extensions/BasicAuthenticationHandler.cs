@@ -14,12 +14,13 @@ using Microsoft.Extensions.Options;
 namespace BaGet.Extensions
 {
 
-    public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+
+    public class BasicAuthenticationHandler : AuthenticationHandler<BasicAuthenticationOptions>
     {
         private readonly IUserService _userService;
 
         public BasicAuthenticationHandler(
-            IOptionsMonitor<AuthenticationSchemeOptions> options,
+            IOptionsMonitor<BasicAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
@@ -29,6 +30,21 @@ namespace BaGet.Extensions
             _userService = userService;
         }
 
+
+        //private string GetTokenFromAuthHeader()
+        //{
+        //    //if (!Request.Headers.TryGetValue("Authorization", out var header))
+        //    //    return null;
+
+        //    //var parts = header.FirstOrDefault()?.Split(new[] { ' ' }, 2);
+        //    //if (parts?.Length != 2)
+        //    //    return null;
+
+        //    //if (parts[0] != "Bearer")
+        //    //    return null;
+
+        //    //return parts[1].Trim();
+        //}
         private bool TryGetCredentialFromHeader(out NetworkCredential credential)
         {
             credential = null;
@@ -52,8 +68,28 @@ namespace BaGet.Extensions
             return true;
         }
 
+
+        protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
+        {
+            Response.Headers["WWW-Authenticate"] = $"Basic realm=\"{Options.Realm}\", charset=\"UTF-8\"";
+            await base.HandleChallengeAsync(properties);
+        }
+
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
+
+            //Debug.WriteLine("DUMMY AUTH");
+
+            //var claims = new Claim[] {
+            //        //new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            //        //new Claim(ClaimTypes.Name, user.Username),
+            //    };
+            //var identity = new ClaimsIdentity(claims, Scheme.Name);
+            //var principal = new ClaimsPrincipal(identity);
+            //var ticket = new AuthenticationTicket(principal, Scheme.Name);
+ 
+
+
             Debug.WriteLine("");
             Debug.WriteLine(nameof(HandleAuthenticateAsync));
             Debug.WriteLine(string.Format("{0}?{1} (Scheme={2})",Request.Path, Request.QueryString, Request.Scheme));
@@ -65,17 +101,26 @@ namespace BaGet.Extensions
 
             Debug.WriteLine(string.Format("Cookies.Count={0}", this.Request.Cookies.Count));
 
+            //return AuthenticateResult.Success(ticket);
+
+            AuthenticationProperties prop = new AuthenticationProperties();
+           
+            //return AuthenticateResult.Fail("mymessage", prop)
+
+
             if (!Request.Headers.ContainsKey("Authorization"))
             {
-                return AuthenticateResult.Fail("Missing Authorization Header");
+                return AuthenticateResult.NoResult();
+                // return AuthenticateResult.Fail("Missing Authorization Header");
             }
 
             if (TryGetCredentialFromHeader(out var credentials) == false)
             {
-                return AuthenticateResult.Fail("Invalid Authorization Header");
+                return AuthenticateResult.NoResult();
+                //return AuthenticateResult.Fail("Invalid Authorization Header");
             }
 
-            if (! await _userService.Authenticate(credentials))
+            if (!await _userService.Authenticate(credentials))
             {
                 return AuthenticateResult.Fail("Invalid Credentials");
             }

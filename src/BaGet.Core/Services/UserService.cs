@@ -10,7 +10,7 @@ namespace BaGet.Core.Services
         private readonly NetworkCredential[] Users;
         public UserService()
         {
-            Users = new NetworkCredential[] { new NetworkCredential("dummyUser", "dummyPassword")};
+            Users = new NetworkCredential[] { new NetworkCredential("dummyUsername", "dummyPassword")};
         }
         public Task<bool> Authenticate(NetworkCredential credential)
         {
