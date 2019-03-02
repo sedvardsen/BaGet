@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
+using System.Net;
 
 namespace BaGet.Core.Services
 {

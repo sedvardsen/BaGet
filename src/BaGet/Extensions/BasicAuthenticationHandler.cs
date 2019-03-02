@@ -1,54 +1,43 @@
 using System;
-using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using BaGet.Core.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
+using BaGet.Core.Services;
 
 namespace BaGet.Extensions
 {
 
-
-    public class BasicAuthenticationHandler : AuthenticationHandler<BasicAuthenticationOptions>
+    /// <summary>
+    /// we call it "NugetAuthenticationHandler" because the implementaion is specially for the Nuget Client and Nuget Client is ignoring some of the RFC's
+    /// </summary>
+    public class NugetAuthenticationHandler : AuthenticationHandler<NugetAuthenticationOptions>
     {
-        private readonly IUserService _userService;
+        private readonly ICredentialsValidationService _authenticationService;
 
-        public BasicAuthenticationHandler(
-            IOptionsMonitor<BasicAuthenticationOptions> options,
+        public NugetAuthenticationHandler(
+            IOptionsMonitor<NugetAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
-            IUserService userService)
+            ICredentialsValidationService authenticationService)
             : base(options, logger, encoder, clock)
         {
-            _userService = userService;
+            _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
         }
 
-
-        //private string GetTokenFromAuthHeader()
-        //{
-        //    //if (!Request.Headers.TryGetValue("Authorization", out var header))
-        //    //    return null;
-
-        //    //var parts = header.FirstOrDefault()?.Split(new[] { ' ' }, 2);
-        //    //if (parts?.Length != 2)
-        //    //    return null;
-
-        //    //if (parts[0] != "Bearer")
-        //    //    return null;
-
-        //    //return parts[1].Trim();
-        //}
-        private bool TryGetCredentialFromHeader(out NetworkCredential credential)
+        private static bool TryGetCredentialFromHeader(string authHeaderString, out NetworkCredential credential)
         {
             credential = null;
-            var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
+            var authHeader = AuthenticationHeaderValue.Parse(authHeaderString);
             if (string.IsNullOrEmpty(authHeader.Parameter)) return false;
             var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
             var credentialSplit = Encoding.UTF8.GetString(credentialBytes).Split(':');
@@ -64,64 +53,46 @@ namespace BaGet.Extensions
             {
               password  = credentialSplit[1];
             }
+
             credential = new NetworkCredential(username,password);
             return true;
         }
 
+        private static readonly string Challenge = "Basic"; //03/2019 => Nuget Client supports "Basic" only. Token scenarios are handled as "Basic" not as "Bearer"
 
         protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
         {
-            Response.Headers["WWW-Authenticate"] = $"Basic realm=\"{Options.Realm}\", charset=\"UTF-8\"";
+            var authResult = await HandleAuthenticateOnceSafeAsync();
+            if (authResult == null) return;
+
+            if (authResult.Succeeded==false)
+            {
+                Response.Headers.Append(HeaderNames.WWWAuthenticate, $"{Challenge}"); //realm, charset, extended error info ?
+            }
             await base.HandleChallengeAsync(properties);
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
+            string authorization = Request.Headers["Authorization"];
 
-            //Debug.WriteLine("DUMMY AUTH");
-
-            //var claims = new Claim[] {
-            //        //new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            //        //new Claim(ClaimTypes.Name, user.Username),
-            //    };
-            //var identity = new ClaimsIdentity(claims, Scheme.Name);
-            //var principal = new ClaimsPrincipal(identity);
-            //var ticket = new AuthenticationTicket(principal, Scheme.Name);
- 
-
-
-            Debug.WriteLine("");
-            Debug.WriteLine(nameof(HandleAuthenticateAsync));
-            Debug.WriteLine(string.Format("{0}?{1} (Scheme={2})",Request.Path, Request.QueryString, Request.Scheme));
-            foreach (var hk in this.Request.Headers.Keys)
+            // If no authorization header found, nothing to process further
+            if (string.IsNullOrEmpty(authorization))
             {
-                var r = this.Request.Headers[hk];
-                Debug.WriteLine(string.Format("{0}={1}", hk, r.ToString()));
-            }
-
-            Debug.WriteLine(string.Format("Cookies.Count={0}", this.Request.Cookies.Count));
-
-            //return AuthenticateResult.Success(ticket);
-
-            AuthenticationProperties prop = new AuthenticationProperties();
-           
-            //return AuthenticateResult.Fail("mymessage", prop)
-
-
-            if (!Request.Headers.ContainsKey("Authorization"))
-            {
+                Logger.LogTrace("Request Header does not contains 'Authorization'");
                 return AuthenticateResult.NoResult();
-                // return AuthenticateResult.Fail("Missing Authorization Header");
             }
 
-            if (TryGetCredentialFromHeader(out var credentials) == false)
+
+            if (TryGetCredentialFromHeader(authorization, out var credentials) == false)
             {
+                Logger.LogTrace("Request Header contains 'Authorization' but it is not valid for Nuget");
                 return AuthenticateResult.NoResult();
-                //return AuthenticateResult.Fail("Invalid Authorization Header");
             }
 
-            if (!await _userService.Authenticate(credentials))
+            if (!await _authenticationService.IsValid(credentials))
             {
+                Logger.LogTrace("Access denied by AuthenticationService");
                 return AuthenticateResult.Fail("Invalid Credentials");
             }
             else
