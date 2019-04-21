@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BaGet.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Versioning;
 
-namespace BaGet.Core.State
+namespace BaGet.Core.Metadata
 {
     public class PackageService : IPackageService
     {
@@ -62,7 +63,11 @@ namespace BaGet.Core.State
             return (await query.ToListAsync()).AsReadOnly();
         }
 
-        public Task<Package> FindOrNullAsync(string id, NuGetVersion version, bool includeUnlisted = false)
+        public Task<Package> FindOrNullAsync(
+            string id,
+            NuGetVersion version,
+            bool includeUnlisted = false,
+            CancellationToken cancellationToken = default)
         {
             var query = _context.Packages
                 .Include(p => p.Dependencies)
@@ -75,7 +80,7 @@ namespace BaGet.Core.State
                 query = query.Where(p => p.Listed);
             }
 
-            return query.FirstOrDefaultAsync();
+            return query.FirstOrDefaultAsync(cancellationToken);
         }
 
         public Task<bool> UnlistPackageAsync(string id, NuGetVersion version)

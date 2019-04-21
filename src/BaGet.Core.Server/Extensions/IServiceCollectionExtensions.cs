@@ -15,7 +15,7 @@ namespace BaGet.Core.Server.Extensions
         {
             services
                 .AddMvc()
-                .AddApplicationPart(typeof(BaGet.Controllers.PackageController).Assembly)
+                .AddApplicationPart(typeof(BaGet.Controllers.PackageContentController).Assembly)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddJsonOptions(options =>
                 {

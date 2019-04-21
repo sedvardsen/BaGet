@@ -5,30 +5,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using BaGet.Core.Entities;
 using BaGet.Core.Mirror;
-using BaGet.Core.State;
-using BaGet.Extensions;
 using BaGet.Protocol;
-using Microsoft.AspNetCore.Mvc;
+using NuGet.Versioning;
 
-namespace BaGet.Controllers.Registration
+namespace BaGet.Core.Metadata
 {
-    /// <summary>
-    /// The API to retrieve the metadata of a specific package.
-    /// </summary>
-    public class RegistrationIndexController : Controller
+    /// <inheritdoc />
+    public class DatabasePackageMetadataService : IBaGetPackageMetadataService
     {
         private readonly IMirrorService _mirror;
         private readonly IPackageService _packages;
 
-        public RegistrationIndexController(IMirrorService mirror, IPackageService packages)
+        public DatabasePackageMetadataService(IMirrorService mirror, IPackageService packages)
         {
             _mirror = mirror ?? throw new ArgumentNullException(nameof(mirror));
             _packages = packages ?? throw new ArgumentNullException(nameof(packages));
         }
 
-        // GET v3/registration/{id}.json
-        [HttpGet]
-        public async Task<IActionResult> Get(string id, CancellationToken cancellationToken)
+        public async Task<RegistrationIndexResponse> GetRegistrationIndexOrNullAsync(string id, CancellationToken cancellationToken = default)
         {
             // Find the packages that match the given package id from the upstream, if
             // one is configured. If these packages cannot be found on the upstream,
@@ -42,7 +36,7 @@ namespace BaGet.Controllers.Registration
 
             if (!packages.Any())
             {
-                return NotFound();
+                return null;
             }
 
             var versions = packages.Select(p => p.Version).ToList();
@@ -50,26 +44,59 @@ namespace BaGet.Controllers.Registration
             // TODO: Paging of registration items.
             // "Un-paged" example: https://api.nuget.org/v3/registration3/newtonsoft.json/index.json
             // Paged example: https://api.nuget.org/v3/registration3/fake/index.json
-            return Json(new RegistrationIndexResponse(
+            return new RegistrationIndexResponse(
                 type: RegistrationIndexResponse.DefaultType,
                 count: packages.Count,
                 totalDownloads: packages.Sum(p => p.Downloads),
                 pages: new[]
                 {
                     new RegistrationIndexPage(
-                        Url.PackageRegistration(packages.First().Id),
+                        null, //Url.PackageRegistration(packages.First().Id),
                         count: packages.Count(),
                         itemsOrNull: packages.Select(ToRegistrationIndexPageItem).ToList(),
                         lower: versions.Min(),
                         upper: versions.Max())
-                }));
+                });
+        }
+
+        public async Task<RegistrationLeafResponse> GetRegistrationLeafOrNullAsync(
+            string id,
+            NuGetVersion version,
+            CancellationToken cancellationToken = default)
+        {
+            // Allow read-through caching to happen if it is configured.
+            await _mirror.MirrorAsync(id, version, cancellationToken);
+
+            var package = await _packages.FindOrNullAsync(id, version, includeUnlisted: true, cancellationToken);
+            if (package == null)
+            {
+                return null;
+            }
+
+            return new RegistrationLeafResponse(
+                type: RegistrationLeafResponse.DefaultType,
+                registrationUri: null, //Url.PackageRegistration(id, nugetVersion),
+                listed: package.Listed,
+                downloads: package.Downloads,
+                packageContentUrl: null, //Url.PackageDownload(id, nugetVersion),
+                published: package.Published,
+                registrationIndexUrl: null); //Url.PackageRegistration(id));
+        }
+
+        public Task<RegistrationPageResponse> GetRegistrationPageOrNullAsync(
+            string id,
+            NuGetVersion lower,
+            NuGetVersion upper,
+            CancellationToken cancellationToken = default)
+        {
+            throw new System.NotImplementedException();
         }
 
         private RegistrationIndexPageItem ToRegistrationIndexPageItem(Package package) =>
             new RegistrationIndexPageItem(
-                leafUrl: Url.PackageRegistration(package.Id, package.Version),
-                packageMetadata: new PackageMetadata(
-                    catalogUri: Url.PackageRegistration(package.Id, package.Version),
+                leafUrl: null,//Url.PackageRegistration(package.Id, package.Version),
+                packageMetadata: new Protocol.PackageMetadata(
+                    catalogUri: null,//Url.PackageRegistration(package.Id, package.Version),
                     packageId: package.Id,
                     version: package.Version,
                     authors: string.Join(", ", package.Authors),
@@ -81,7 +108,7 @@ namespace BaGet.Controllers.Registration
                     licenseUrl: package.LicenseUrlString,
                     listed: package.Listed,
                     minClientVersion: package.MinClientVersion,
-                    packageContent: Url.PackageDownload(package.Id, package.Version),
+                    packageContent: null, //Url.PackageDownload(package.Id, package.Version),
                     packageTypes: package.PackageTypes.Select(t => t.Name).ToList(),
                     projectUrl: package.ProjectUrlString,
                     repositoryUrl: package.RepositoryUrlString,
@@ -92,7 +119,7 @@ namespace BaGet.Controllers.Registration
                     tags: package.Tags,
                     title: package.Title,
                     dependencyGroups: ToDependencyGroups(package)),
-                packageContent: Url.PackageDownload(package.Id, package.Version));
+                packageContent: null); //Url.PackageDownload(package.Id, package.Version));
 
         private IReadOnlyList<DependencyGroupItem> ToDependencyGroups(Package package)
         {

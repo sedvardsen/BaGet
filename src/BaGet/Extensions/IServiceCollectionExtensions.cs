@@ -13,10 +13,10 @@ using BaGet.Core.Configuration;
 using BaGet.Core.Entities;
 using BaGet.Core.Extensions;
 using BaGet.Core.Indexing;
+using BaGet.Core.Metadata;
 using BaGet.Core.Mirror;
 using BaGet.Core.Search;
 using BaGet.Core.Server.Extensions;
-using BaGet.Core.State;
 using BaGet.Core.Storage;
 using BaGet.Database.MySql;
 using BaGet.Database.PostgreSql;
@@ -64,6 +64,7 @@ namespace BaGet.Extensions
             services.AddTransient<IPackageIndexingService, PackageIndexingService>();
             services.AddTransient<IPackageDeletionService, PackageDeletionService>();
             services.AddTransient<ISymbolIndexingService, SymbolIndexingService>();
+            services.AddTransient<IBaGetPackageMetadataService, DatabasePackageMetadataService>();
             services.AddSingleton<IFrameworkCompatibilityService, FrameworkCompatibilityService>();
             services.AddMirrorServices();
 

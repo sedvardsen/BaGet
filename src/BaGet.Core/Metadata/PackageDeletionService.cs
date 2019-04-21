@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NuGet.Versioning;
 
-namespace BaGet.Core.State
+namespace BaGet.Core.Metadata
 {
     public class PackageDeletionService : IPackageDeletionService
     {

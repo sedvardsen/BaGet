@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BaGet.Core.Metadata;
 using BaGet.Core.Mirror;
-using BaGet.Core.State;
 using BaGet.Core.Storage;
 using BaGet.Protocol;
 using Microsoft.AspNetCore.Mvc;
@@ -11,13 +11,17 @@ using NuGet.Versioning;
 
 namespace BaGet.Controllers
 {
-    public class PackageController : Controller
+    /// <summary>
+    /// The Package Content resource, used to download content from packages.
+    /// See: https://docs.microsoft.com/en-us/nuget/api/package-base-address-resource
+    /// </summary>
+    public class PackageContentController : Controller
     {
         private readonly IMirrorService _mirror;
         private readonly IPackageService _packages;
         private readonly IPackageStorageService _storage;
 
-        public PackageController(IMirrorService mirror, IPackageService packages, IPackageStorageService storage)
+        public PackageContentController(IMirrorService mirror, IPackageService packages, IPackageStorageService storage)
         {
             _mirror = mirror ?? throw new ArgumentNullException(nameof(mirror));
             _packages = packages ?? throw new ArgumentNullException(nameof(packages));

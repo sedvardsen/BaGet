@@ -16,7 +16,7 @@ namespace BaGet.Controllers
             _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
         }
 
-        public async Task<ActionResult<SearchResponse>> Get(
+        public async Task<ActionResult<SearchResponse>> SearchAsync(
             [FromQuery(Name = "q")] string query = null,
             [FromQuery]int skip = 0,
             [FromQuery]int take = 20,
@@ -46,7 +46,7 @@ namespace BaGet.Controllers
                 context: SearchContext.Default(Url.RegistrationsBase()));
         }
 
-        public async Task<ActionResult<AutocompleteResponse>> Autocomplete([FromQuery(Name = "q")] string query = null)
+        public async Task<ActionResult<AutocompleteResponse>> AutocompleteAsync([FromQuery(Name = "q")] string query = null)
         {
             // TODO: Add other autocomplete parameters
             // TODO: Support versions autocomplete.
@@ -58,7 +58,7 @@ namespace BaGet.Controllers
             });
         }
 
-        public async Task<ActionResult<DependentsResponse>> Dependents([FromQuery] string packageId)
+        public async Task<ActionResult<DependentsResponse>> DependentsAsync([FromQuery] string packageId)
         {
             // TODO: Add other dependents parameters.
             return await _searchService.FindDependentsAsync(new DependentsRequest

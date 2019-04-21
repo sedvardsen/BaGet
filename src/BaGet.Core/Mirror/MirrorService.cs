@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using BaGet.Core.Entities;
 using BaGet.Core.Extensions;
 using BaGet.Core.Indexing;
-using BaGet.Core.State;
+using BaGet.Core.Metadata;
 using BaGet.Protocol;
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;

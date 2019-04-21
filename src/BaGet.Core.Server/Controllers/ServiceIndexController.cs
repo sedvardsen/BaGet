@@ -9,7 +9,7 @@ namespace BaGet.Controllers
     /// <summary>
     /// The NuGet Service Index. This aids NuGet client to discover this server's services.
     /// </summary>
-    public class IndexController : Controller
+    public class ServiceIndexController : Controller
     {
         private IEnumerable<ServiceIndexResource> BuildResource(string name, string url, params string[] versions) 
         {

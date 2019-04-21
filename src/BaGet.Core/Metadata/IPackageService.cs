@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BaGet.Core.Entities;
 using NuGet.Versioning;
 
-namespace BaGet.Core.State
+namespace BaGet.Core.Metadata
 {
     /// <summary>
     /// The "source of truth" for packages' state. Packages' content
@@ -24,8 +25,13 @@ namespace BaGet.Core.State
         /// <param name="id">The package's id.</param>
         /// <param name="version">The package's version.</param>
         /// <param name="includeUnlisted">Whether unlisted results should be included.</param>
+        /// <param name="cancellationToken">A token to cancel the task.</param>
         /// <returns>The package found, or null.</returns>
-        Task<Package> FindOrNullAsync(string id, NuGetVersion version, bool includeUnlisted = false);
+        Task<Package> FindOrNullAsync(
+            string id,
+            NuGetVersion version,
+            bool includeUnlisted = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Attempt to find all packages with a given id.
