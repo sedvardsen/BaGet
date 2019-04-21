@@ -21,9 +21,9 @@ namespace BaGet.Protocol
         }
 
         /// <inheritdoc />
-        public async Task<PackageVersions> GetPackageVersionsOrNullAsync(string url)
+        public async Task<PackageVersionsResponse> GetPackageVersionsOrNullAsync(string url)
         {
-            var response = await _httpClient.DeserializeUrlAsync<PackageVersions>(url);
+            var response = await _httpClient.DeserializeUrlAsync<PackageVersionsResponse>(url);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return null;

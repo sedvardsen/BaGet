@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using BaGet.Protocol.Converters;
 using Newtonsoft.Json;

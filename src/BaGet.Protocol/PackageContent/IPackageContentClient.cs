@@ -15,7 +15,7 @@ namespace BaGet.Protocol
         /// </summary>
         /// <param name="url">The URL to fetch the package versions from.</param>
         /// <returns>The package's versions, or null if the package does not exist</returns>
-        Task<PackageVersions> GetPackageVersionsOrNullAsync(string url);
+        Task<PackageVersionsResponse> GetPackageVersionsOrNullAsync(string url);
 
         /// <summary>
         /// Download a package.

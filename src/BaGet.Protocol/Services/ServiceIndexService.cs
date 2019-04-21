@@ -27,14 +27,14 @@ namespace BaGet.Protocol
         public static readonly string[] SymbolPackagePublish = { "SymbolPackagePublish" + Version490 };
 
         private readonly IServiceIndexClient _client;
-        private readonly Lazy<Task<ServiceIndex>> _serviceIndexTask;
+        private readonly Lazy<Task<ServiceIndexResponse>> _serviceIndexTask;
 
         public ServiceIndexService(
             string serviceIndexUrl,
             IServiceIndexClient client)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            _serviceIndexTask = new Lazy<Task<ServiceIndex>>(() =>
+            _serviceIndexTask = new Lazy<Task<ServiceIndexResponse>>(() =>
             {
                 return client.GetServiceIndexAsync(serviceIndexUrl);
             });

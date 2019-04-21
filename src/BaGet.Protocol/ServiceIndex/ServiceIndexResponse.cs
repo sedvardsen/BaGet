@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using BaGet.Protocol.Converters;
 using Newtonsoft.Json;
@@ -11,9 +11,9 @@ namespace BaGet.Protocol
     /// Documentation: https://docs.microsoft.com/en-us/nuget/api/overview
     /// NuGet.org: https://api.nuget.org/v3-index/index.json
     /// </summary>
-    public class ServiceIndex
+    public class ServiceIndexResponse
     {
-        public ServiceIndex(NuGetVersion version, IReadOnlyList<ServiceIndexResource> resources)
+        public ServiceIndexResponse(NuGetVersion version, IReadOnlyList<ServiceIndexResource> resources)
         {
             Version = version ?? throw new ArgumentNullException(nameof(version));
             Resources = resources ?? throw new ArgumentNullException(nameof(resources));

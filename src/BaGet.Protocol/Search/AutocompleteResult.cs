@@ -7,9 +7,9 @@ namespace BaGet.Protocol
     /// The package ids that matched the autocomplete query.
     /// Documentation: https://docs.microsoft.com/en-us/nuget/api/search-autocomplete-service-resource#search-for-package-ids
     /// </summary>
-    public class AutocompleteResult
+    public class AutocompleteResponse
     {
-        public AutocompleteResult(
+        public AutocompleteResponse(
             int totalHits,
             IReadOnlyList<string> data,
             AutocompleteContext context = null)

@@ -23,7 +23,7 @@ namespace BaGet.Controllers
 
         // GET v3/index
         [HttpGet]
-        public ServiceIndex Get()
+        public ServiceIndexResponse Get()
         {
             var resources = new List<ServiceIndexResource>();
 
@@ -34,7 +34,7 @@ namespace BaGet.Controllers
             resources.AddRange(BuildResource("PackageBaseAddress", Url.PackageBase(), "3.0.0"));
             resources.AddRange(BuildResource("SearchAutocompleteService", Url.PackageAutocomplete(), "", "3.0.0-rc", "3.0.0-beta"));
 
-            return new ServiceIndex(new NuGetVersion("3.0.0"), resources);
+            return new ServiceIndexResponse(new NuGetVersion("3.0.0"), resources);
         }
     }
 }

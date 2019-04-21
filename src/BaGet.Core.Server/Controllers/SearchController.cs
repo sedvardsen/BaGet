@@ -47,21 +47,21 @@ namespace BaGet.Controllers
                 context: SearchContext.Default(Url.RegistrationsBase()));
         }
 
-        public async Task<ActionResult<AutocompleteResult>> Autocomplete([FromQuery(Name = "q")] string query = null)
+        public async Task<ActionResult<AutocompleteResponse>> Autocomplete([FromQuery(Name = "q")] string query = null)
         {
             var results = await _searchService.AutocompleteAsync(query);
 
-            return new AutocompleteResult(
+            return new AutocompleteResponse(
                 results.Count,
                 results,
                 AutocompleteContext.Default);
         }
 
-        public async Task<ActionResult<DependentResult>> Dependents([FromQuery(Name = "packageId")] string packageId)
+        public async Task<ActionResult<DependentResponse>> Dependents([FromQuery(Name = "packageId")] string packageId)
         {
             var results = await _searchService.FindDependentsAsync(packageId);
 
-            return new DependentResult(results.Count, results);
+            return new DependentResponse(results.Count, results);
         }
 
         private ProtocolSearchResult ToSearchResult(QuerySearchResult result)

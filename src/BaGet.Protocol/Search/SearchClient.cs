@@ -20,9 +20,9 @@ namespace BaGet.Protocol
             return response.GetResultOrThrow();
         }
 
-        public async Task<AutocompleteResult> GetAutocompleteResultsAsync(string searchUrl)
+        public async Task<AutocompleteResponse> GetAutocompleteResultsAsync(string searchUrl)
         {
-            var response = await _httpClient.DeserializeUrlAsync<AutocompleteResult>(searchUrl);
+            var response = await _httpClient.DeserializeUrlAsync<AutocompleteResponse>(searchUrl);
 
             return response.GetResultOrThrow();
         }
