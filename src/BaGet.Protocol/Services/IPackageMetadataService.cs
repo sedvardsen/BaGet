@@ -9,7 +9,7 @@ namespace BaGet.Protocol
     /// <summary>
     /// Gets metadata about a package from a remote feed.
     /// </summary>
-    public interface IPackageMetadataService
+    public interface IPackageMetadataService2
     {
         /// <summary>
         /// Get the URI to download a package's content from a remote NuGet feed.

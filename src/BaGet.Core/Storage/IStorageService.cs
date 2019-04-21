@@ -23,7 +23,7 @@ namespace BaGet.Core.Storage
         /// Get content from storage.
         /// </summary>
         /// <param name="path">The content's path.</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">A token to cancel the task.</param>
         /// <returns>The path's content.</returns>
         Task<Stream> GetAsync(string path, CancellationToken cancellationToken = default);
 
@@ -31,6 +31,7 @@ namespace BaGet.Core.Storage
         /// Get a URI that can be used to download the content.
         /// </summary>
         /// <param name="path">The content's path.</param>
+        /// <param name="cancellationToken">A token to cancel the task.</param>
         /// <returns>The content's URI. This may be a local file.</returns>
         Task<Uri> GetDownloadUriAsync(string path, CancellationToken cancellationToken = default);
 

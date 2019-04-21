@@ -1,6 +1,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -19,11 +20,13 @@ namespace BaGet.Protocol
 
         public static async Task<ResponseAndResult<T>> DeserializeUrlAsync<T>(
             this HttpClient httpClient,
-            string documentUrl)
+            string documentUrl,
+            CancellationToken cancellationToken = default)
         {
             using (var response = await httpClient.GetAsync(
                 documentUrl,
-                HttpCompletionOption.ResponseHeadersRead))
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken))
             {
                 if (response.StatusCode != HttpStatusCode.OK)
                 {

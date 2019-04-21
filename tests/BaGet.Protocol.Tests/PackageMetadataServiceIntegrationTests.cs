@@ -5,6 +5,7 @@ using Xunit;
 
 namespace BaGet.Protocol.Tests
 {
+    /*
     public class PackageMetadataServiceIntegrationTests
     {
         private readonly PackageMetadataService _target;
@@ -46,5 +47,5 @@ namespace BaGet.Protocol.Tests
         {
             var result = await _target.GetAllVersionsOrNullAsync("Fake", includeUnlisted);
         }
-    }
+    }*/
 }

@@ -23,7 +23,7 @@ namespace BaGet.Protocol
         }
 
         /// <summary>
-        /// The versions.
+        /// The versions lowercased and normalized. 
         /// </summary>
         [JsonConverter(typeof(NuGetVersionListConverter))]
         public IReadOnlyList<NuGetVersion> Versions { get; }

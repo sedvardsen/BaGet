@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BaGet.Protocol
@@ -13,6 +14,6 @@ namespace BaGet.Protocol
         /// See: https://docs.microsoft.com/en-us/nuget/api/service-index#resources
         /// </summary>
         /// <returns>The resources available on this package feed.</returns>
-        Task<ServiceIndexResponse> GetAsync();
+        Task<ServiceIndexResponse> GetAsync(CancellationToken cancellationToken = default);
     }
 }

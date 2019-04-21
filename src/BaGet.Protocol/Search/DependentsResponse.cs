@@ -5,11 +5,11 @@ namespace BaGet.Protocol
 {
     /// <summary>
     /// The package ids that depend on the queried package.
-    /// This is an unofficial API that isn't documented.
+    /// This is an unofficial API that isn't part of the NuGet protocol.
     /// </summary>
-    public class DependentResponse
+    public class DependentsResponse
     {
-        public DependentResponse(int totalHits, IReadOnlyList<string> data)
+        public DependentsResponse(long totalHits, IReadOnlyList<string> data)
         {
             TotalHits = totalHits;
             Data = data ?? throw new ArgumentNullException(nameof(data));
@@ -18,7 +18,7 @@ namespace BaGet.Protocol
         /// <summary>
         /// The total number of matches, disregarding skip and take.
         /// </summary>
-        public int TotalHits { get; }
+        public long TotalHits { get; }
 
         /// <summary>
         /// The package IDs matched by the dependent query.

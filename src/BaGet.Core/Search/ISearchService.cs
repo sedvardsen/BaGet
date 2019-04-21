@@ -1,58 +1,70 @@
-using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BaGet.Core.Entities;
-using NuGet.Versioning;
+using BaGet.Protocol;
 
 namespace BaGet.Core.Search
 {
-    public interface ISearchService
+    /// <summary>
+    /// BaGet's extensions to the NuGet Search resource. These additions
+    /// are not part of the official protocol.
+    /// </summary>
+    public interface IBaGetSearchService : ISearchService
     {
-        Task IndexAsync(Package package);
+        /// <summary>
+        /// Add a package to the search index.
+        /// </summary>
+        /// <param name="package">The package to add.</param>
+        /// <param name="cancellationToken">A token to cancel the task.</param>
+        /// <returns>A task that completes once the package has been added.</returns>
+        Task IndexAsync(Package package, CancellationToken cancellationToken = default);
 
-        Task<IReadOnlyList<SearchResult>> SearchAsync(
-            string query,
-            int skip = 0,
-            int take = 20,
-            bool includePrerelease = true,
-            bool includeSemVer2 = true,
-            string packageType = null,
-            string framework = null);
+        /// <summary>
+        /// Perform a search query.
+        /// </summary>
+        /// <param name="request">The search request.</param>
+        /// <param name="cancellationToken">A token to cancel the task.</param>
+        /// <returns>The search response.</returns>
+        Task<SearchResponse> SearchAsync(BaGetSearchRequest request, CancellationToken cancellationToken = default);
 
-        Task<IReadOnlyList<string>> AutocompleteAsync(string query, int skip = 0, int take = 20);
-
-        Task<IReadOnlyList<string>> FindDependentsAsync(string packageId, int skip = 0, int take = 20);
+        /// <summary>
+        /// Find the packages that depend on a given package.
+        /// </summary>
+        /// <param name="request">The dependents request.</param>
+        /// <param name="cancellationToken">A token to cancel the task.</param>
+        /// <returns>The dependents response.</returns>
+        Task<DependentsResponse> FindDependentsAsync(DependentsRequest request, CancellationToken cancellationToken = default);
     }
 
-    public class SearchResult
+    /// <summary>
+    /// BaGet's extensions to a search request. These additions
+    /// are not part of the official protocol.
+    /// </summary>
+    public class BaGetSearchRequest : SearchRequest
     {
-        public string Id { get; set; }
-
-        public NuGetVersion Version { get; set; }
-
-        public string Description { get; set; }
-        public IReadOnlyList<string> Authors { get; set; }
-        public string IconUrl { get; set; }
-        public string LicenseUrl { get; set; }
-        public string ProjectUrl { get; set; }
-        public string Summary { get; set; }
-        public string[] Tags { get; set; }
-        public string Title { get; set; }
-        public long TotalDownloads { get; set; }
-
-        public IReadOnlyList<SearchResultVersion> Versions { get; set; }
-    }
-
-    public class SearchResultVersion
-    {
-        public SearchResultVersion(NuGetVersion version, long downloads)
+        public static BaGetSearchRequest FromSearchRequest(SearchRequest request)
         {
-            Version = version ?? throw new ArgumentNullException(nameof(version));
-            Downloads = downloads;
+            return new BaGetSearchRequest
+            {
+                Skip = request.Skip,
+                Take = request.Take,
+                IncludePrerelease = request.IncludePrerelease,
+                IncludeSemVer2 = request.IncludeSemVer2,
+                Query = request.Query,
+
+                PackageType = null,
+                Framework = null,
+            };
         }
 
-        public NuGetVersion Version { get; }
+        /// <summary>
+        /// The type of packages that should be returned.
+        /// </summary>
+        public string PackageType { get; set; }
 
-        public long Downloads { get; }
+        /// <summary>
+        /// The Target Framework that results should be compatible.
+        /// </summary>
+        public string Framework { get; set; }
     }
 }

@@ -10,7 +10,7 @@ namespace BaGet.Protocol
     public class AutocompleteResponse
     {
         public AutocompleteResponse(
-            int totalHits,
+            long totalHits,
             IReadOnlyList<string> data,
             AutocompleteContext context = null)
         {
@@ -24,7 +24,7 @@ namespace BaGet.Protocol
         /// <summary>
         /// The total number of matches, disregarding skip and take.
         /// </summary>
-        public int TotalHits { get; }
+        public long TotalHits { get; }
 
         /// <summary>
         /// The package IDs matched by the autocomplete query.

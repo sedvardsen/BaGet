@@ -6,8 +6,9 @@ namespace BaGet.Protocol
 {
     /// <summary>
     /// The metadata for a package and all of its versions.
+    /// See: https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#registration-index
     /// </summary>
-    public class RegistrationIndex
+    public class RegistrationIndexResponse
     {
         public static readonly IReadOnlyList<string> DefaultType = new List<string>
         {
@@ -16,7 +17,7 @@ namespace BaGet.Protocol
             "catalog:Permalink"
         };
 
-        public RegistrationIndex(
+        public RegistrationIndexResponse(
             int count,
             long totalDownloads,
             IReadOnlyList<RegistrationIndexPage> pages,

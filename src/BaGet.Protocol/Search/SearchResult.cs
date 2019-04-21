@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using BaGet.Protocol.Converters;
 using Newtonsoft.Json;
@@ -53,7 +53,7 @@ namespace BaGet.Protocol
 
         public string Id { get; }
 
-        [JsonConverter(typeof(NuGetVersionConverter))]
+        [JsonConverter(typeof(NuGetVersionConverter), NuGetVersionConversionFlags.IncludeBuildMetadata)]
         public NuGetVersion Version { get; }
 
         public string Description { get; }

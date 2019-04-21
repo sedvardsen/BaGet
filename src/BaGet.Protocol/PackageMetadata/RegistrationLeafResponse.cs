@@ -6,9 +6,9 @@ namespace BaGet.Protocol
 {
     /// <summary>
     /// The metadata for a single version of a package.
-    /// Documentation: https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource
+    /// See: https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource
     /// </summary>
-    public class RegistrationLeaf
+    public class RegistrationLeafResponse
     {
         public static readonly IReadOnlyList<string> DefaultType = new List<string>
         {
@@ -16,7 +16,7 @@ namespace BaGet.Protocol
             "http://schema.nuget.org/catalog#Permalink"
         };
 
-        public RegistrationLeaf(
+        public RegistrationLeafResponse(
             string registrationUri,
             bool listed,
             long downloads,

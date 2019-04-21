@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -7,16 +7,17 @@ using NuGet.Versioning;
 
 namespace BaGet.Protocol
 {
-    public class PackageMetadataService : IPackageMetadataService
+    /*
+    public class PackageMetadataService2 : IPackageMetadataService2
     {
         private readonly IServiceIndexService _serviceIndexService;
-        private readonly IRegistrationClient _registrationClient;
-        private readonly IPackageContentClient _packageContentClient;
+        private readonly IPackageMetadataService _registrationClient;
+        private readonly IPackageContentService _packageContentClient;
 
         public PackageMetadataService(
             IServiceIndexService serviceIndexService,
-            IRegistrationClient registrationClient,
-            IPackageContentClient packageContentClient)
+            IPackageMetadataService registrationClient,
+            IPackageContentService packageContentClient)
         {
             _serviceIndexService = serviceIndexService ?? throw new ArgumentNullException(nameof(serviceIndexService));
             _registrationClient = registrationClient ?? throw new ArgumentNullException(nameof(registrationClient));
@@ -131,4 +132,5 @@ namespace BaGet.Protocol
             return result;
         }
     }
+    */
 }

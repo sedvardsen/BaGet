@@ -43,8 +43,8 @@ namespace BaGet.Controllers.Registration
                 return NotFound();
             }
 
-            var result = new RegistrationLeaf(
-                type: RegistrationLeaf.DefaultType,
+            var result = new RegistrationLeafResponse(
+                type: RegistrationLeafResponse.DefaultType,
                 registrationUri: Url.PackageRegistration(id, nugetVersion),
                 listed: package.Listed,
                 downloads: package.Downloads,

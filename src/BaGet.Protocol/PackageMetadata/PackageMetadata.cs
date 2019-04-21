@@ -6,6 +6,10 @@ using NuGet.Versioning;
 
 namespace BaGet.Protocol
 {
+    /// <summary>
+    /// The metadata for a package.
+    /// See: https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#catalog-entry
+    /// </summary>
     public class PackageMetadata
     {
         public PackageMetadata(
@@ -65,7 +69,10 @@ namespace BaGet.Protocol
         [JsonProperty(PropertyName = "id")]
         public string PackageId { get; }
 
-        [JsonConverter(typeof(NuGetVersionConverter))]
+        /// <summary>
+        /// The full NuGet version after normalization, including any semver2 build metadata.
+        /// </summary>
+        [JsonConverter(typeof(NuGetVersionConverter), NuGetVersionConversionFlags.IncludeBuildMetadata)]
         public NuGetVersion Version { get; }
 
         public string Authors { get; }
