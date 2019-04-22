@@ -10,6 +10,7 @@ using BaGet.Azure.Extensions;
 using BaGet.Azure.Search;
 using BaGet.Core.Authentication;
 using BaGet.Core.Configuration;
+using BaGet.Core.Content;
 using BaGet.Core.Entities;
 using BaGet.Core.Extensions;
 using BaGet.Core.Indexing;
@@ -64,6 +65,7 @@ namespace BaGet.Extensions
             services.AddTransient<IPackageIndexingService, PackageIndexingService>();
             services.AddTransient<IPackageDeletionService, PackageDeletionService>();
             services.AddTransient<ISymbolIndexingService, SymbolIndexingService>();
+            services.AddTransient<IBaGetPackageContentService, DatabasePackageContentService>();
             services.AddTransient<IBaGetPackageMetadataService, DatabasePackageMetadataService>();
             services.AddSingleton<IFrameworkCompatibilityService, FrameworkCompatibilityService>();
             services.AddMirrorServices();

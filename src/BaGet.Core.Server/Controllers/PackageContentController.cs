@@ -1,10 +1,7 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BaGet.Core.Metadata;
-using BaGet.Core.Mirror;
-using BaGet.Core.Storage;
+using BaGet.Core.Content;
 using BaGet.Protocol;
 using Microsoft.AspNetCore.Mvc;
 using NuGet.Versioning;
@@ -17,97 +14,68 @@ namespace BaGet.Controllers
     /// </summary>
     public class PackageContentController : Controller
     {
-        private readonly IMirrorService _mirror;
-        private readonly IPackageService _packages;
-        private readonly IPackageStorageService _storage;
+        private readonly IBaGetPackageContentService _content;
 
-        public PackageContentController(IMirrorService mirror, IPackageService packages, IPackageStorageService storage)
+        public PackageContentController(IBaGetPackageContentService content)
         {
-            _mirror = mirror ?? throw new ArgumentNullException(nameof(mirror));
-            _packages = packages ?? throw new ArgumentNullException(nameof(packages));
-            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            _content = content ?? throw new ArgumentNullException(nameof(content));
         }
 
-        public async Task<IActionResult> Versions(string id, CancellationToken cancellationToken)
+        public async Task<ActionResult<PackageVersionsResponse>> GetPackageVersionsAsync(string id, CancellationToken cancellationToken)
         {
-            // First, attempt to find all package versions using the upstream source.
-            var versions = await _mirror.FindPackageVersionsOrNullAsync(id, cancellationToken);
-
+            var versions = await _content.GetPackageVersionsOrNullAsync(id, cancellationToken);
             if (versions == null)
             {
-                // Fallback to the local packages if the package couldn't be found
-                // on the upstream source.
-                var packages = await _packages.FindAsync(id);
-
-                if (!packages.Any())
-                {
-                    return NotFound();
-                }
-
-                versions = packages.Select(p => p.Version).ToList();
+                return NotFound();
             }
 
-            return Json(new PackageVersionsResponse(versions));
+            return versions;
         }
 
-        public async Task<IActionResult> DownloadPackage(string id, string version, CancellationToken cancellationToken)
+        public async Task<IActionResult> DownloadPackageAsync(string id, string version, CancellationToken cancellationToken)
         {
             if (!NuGetVersion.TryParse(version, out var nugetVersion))
             {
                 return NotFound();
             }
 
-            // Allow read-through caching if it is configured.
-            await _mirror.MirrorAsync(id, nugetVersion, cancellationToken);
-
-            if (!await _packages.AddDownloadAsync(id, nugetVersion))
+            var packageStream = await _content.GetPackageContentStreamOrNullAsync(id, nugetVersion, cancellationToken);
+            if (packageStream == null)
             {
                 return NotFound();
             }
-
-            var packageStream = await _storage.GetPackageStreamAsync(id, nugetVersion, cancellationToken);
 
             return File(packageStream, "application/octet-stream");
         }
 
-        public async Task<IActionResult> DownloadNuspec(string id, string version, CancellationToken cancellationToken)
+        public async Task<IActionResult> DownloadNuspecAsync(string id, string version, CancellationToken cancellationToken)
         {
             if (!NuGetVersion.TryParse(version, out var nugetVersion))
             {
                 return NotFound();
             }
 
-            // Allow read-through caching if it is configured.
-            await _mirror.MirrorAsync(id, nugetVersion, cancellationToken);
-
-            if (!await _packages.ExistsAsync(id, nugetVersion))
+            var nuspecStream = await _content.GetPackageManifestStreamOrNullAsync(id, nugetVersion, cancellationToken);
+            if (nuspecStream == null)
             {
                 return NotFound();
             }
-
-            var nuspecStream = await _storage.GetNuspecStreamAsync(id, nugetVersion, cancellationToken);
 
             return File(nuspecStream, "text/xml");
         }
 
-        public async Task<IActionResult> DownloadReadme(string id, string version, CancellationToken cancellationToken)
+        public async Task<IActionResult> DownloadReadmeAsync(string id, string version, CancellationToken cancellationToken)
         {
             if (!NuGetVersion.TryParse(version, out var nugetVersion))
             {
                 return NotFound();
             }
 
-            // Allow read-through caching if it is configured.
-            await _mirror.MirrorAsync(id, nugetVersion, cancellationToken);
-
-            var package = await _packages.FindOrNullAsync(id, nugetVersion);
-
-            if (package == null || !package.HasReadme)
+            var readmeStream = await _content.GetPackageReadmeStreamOrNullAsync(id, nugetVersion, cancellationToken);
+            if (readmeStream == null)
             {
                 return NotFound();
             }
-
-            var readmeStream = await _storage.GetReadmeStreamAsync(id, nugetVersion, cancellationToken);
 
             return File(readmeStream, "text/markdown");
         }

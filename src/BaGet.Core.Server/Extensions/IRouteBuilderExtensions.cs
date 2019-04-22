@@ -99,22 +99,22 @@ namespace BaGet.Extensions
             routes.MapRoute(
                 name: Routes.PackageVersionsRouteName,
                 template: "v3/package/{id}/index.json",
-                defaults: new { controller = "PackageContent", action = "Versions" });
+                defaults: new { controller = "PackageContent", action = "GetPackageVersionsAsync" });
 
             routes.MapRoute(
                 name: Routes.PackageDownloadRouteName,
                 template: "v3/package/{id}/{version}/{idVersion}.nupkg",
-                defaults: new { controller = "PackageContent", action = "DownloadPackage" });
+                defaults: new { controller = "PackageContent", action = "DownloadPackageAsync" });
 
             routes.MapRoute(
                 name: Routes.PackageDownloadManifestRouteName,
                 template: "v3/package/{id}/{version}/{id2}.nuspec",
-                defaults: new { controller = "PackageContent", action = "DownloadNuspec" });
+                defaults: new { controller = "PackageContent", action = "DownloadNuspecAsync" });
 
             routes.MapRoute(
                 name: Routes.PackageDownloadReadmeRouteName,
                 template: "v3/package/{id}/{version}/readme",
-                defaults: new { controller = "PackageContent", action = "DownloadReadme" });
+                defaults: new { controller = "PackageContent", action = "DownloadReadmeAsync" });
 
             return routes;
         }
