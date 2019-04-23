@@ -10,6 +10,8 @@ namespace BaGet.Core.Configuration
         /// </summary>
         public string ApiKey { get; set; }
 
+        public string RestrictedToAzureDevopsOrg { get; set; }
+
         /// <summary>
         /// The application root URL for usage in reverse proxy scenarios.
         /// </summary>
@@ -50,7 +52,7 @@ namespace BaGet.Core.Configuration
         public MirrorOptions Mirror { get; set; }
 
         [Required] //Required but WITH Default value => section can be missing inside appsettings for older configurations without feed authentication
-        public FeedAuthenticationOptions FeedAuthentication { get; set; } = new FeedAuthenticationOptions() { Type = AuthenticationType.None };
+        public FeedAuthenticationOptions FeedAuthentication { get; set; } = new FeedAuthenticationOptions() { Type = AuthenticationType.Basic };
 
         /// <summary>
         /// if enabled "Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII" is set to true, means the tracing shows some (security) critical information

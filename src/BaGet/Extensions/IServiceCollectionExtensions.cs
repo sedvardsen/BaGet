@@ -40,6 +40,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using BaGet.Core.Services;
 
 namespace BaGet.Extensions
 {
@@ -131,10 +132,30 @@ namespace BaGet.Extensions
 
             //we need better naming to distinguish Api Key authentication (push)  from feed Authentication (pull)
             services.AddAuthenticationProviders(); //API-Key
-
-            services.AddNugetAuthentication((cred) => Task.FromResult(true));
+            var restrictToAzureDevopsOrg = configuration[nameof(BaGetOptions.RestrictedToAzureDevopsOrg)];
+            if (string.IsNullOrEmpty(restrictToAzureDevopsOrg))
+            {
+                services.AddNugetAuthentication((cred) => Task.FromResult(true));
+            }
+            else
+            {
+                services.AddNugetAuthentication((cred) => checkAccessInOrg(cred, restrictToAzureDevopsOrg));
+            }
+            
 
             return services;
+        }
+
+        private static async Task<bool> checkAccessInOrg(ICredentials cred, string restrictToAzureDevopsOrg)
+        {
+            var client = new HttpClient();
+            var credentials = cred.GetCredential(new Uri("http://tempuri.org"), "Basic");
+            var byteArray = Encoding.ASCII.GetBytes($"notused:{credentials.Password}");
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+
+            var call = await client.GetAsync($"https://dev.azure.com/{restrictToAzureDevopsOrg}/_apis/build/builds?api-version=5.0&$top=0");
+            
+            return call.IsSuccessStatusCode;
         }
 
         public static IServiceCollection AddBaGetContext(this IServiceCollection services)
@@ -362,7 +383,7 @@ namespace BaGet.Extensions
 
         public static IServiceCollection AddAuthenticationProviders(this IServiceCollection services)
         {
-            services.AddTransient<BaGet.Core.Services.IAuthenticationService, ApiKeyAuthenticationService>();
+            services.AddTransient<BaGet.Core.Authentication.IAuthenticationService, ApiKeyAuthenticationService>();
             return services;
         }
     }
