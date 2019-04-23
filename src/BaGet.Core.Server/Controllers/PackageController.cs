@@ -6,11 +6,13 @@ using BaGet.Core.Mirror;
 using BaGet.Core.State;
 using BaGet.Core.Storage;
 using BaGet.Protocol;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NuGet.Versioning;
 
 namespace BaGet.Controllers
 {
+    [Authorize()]
     public class PackageController : Controller
     {
         private readonly IMirrorService _mirror;
@@ -23,7 +25,7 @@ namespace BaGet.Controllers
             _packages = packages ?? throw new ArgumentNullException(nameof(packages));
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
-
+       
         public async Task<IActionResult> Versions(string id, CancellationToken cancellationToken)
         {
             // First, attempt to find all package versions using the upstream source.

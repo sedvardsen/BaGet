@@ -26,13 +26,72 @@ using BaGet.GCP.Configuration;
 using BaGet.GCP.Extensions;
 using BaGet.GCP.Services;
 using BaGet.Protocol;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace BaGet.Extensions
 {
+
+
+
+    public static class NugetAuthenticationExtensions
+    {
+
+        public static AuthenticationBuilder AddNugetAuthentication(this IServiceCollection services, Func<ICredentials, Task<bool>> credentialsValidation)
+        {
+            return services.AddAuthentication("Basic").AddNuget(credentialsValidation);
+        }
+
+
+        //public static AuthenticationBuilder AddNuget<TAuthService>(this AuthenticationBuilder builder)
+        //    where TAuthService : class, IAuthenticationService
+        //{
+        //    //return AddBasic<TAuthService>(builder, BasicAuthenticationDefaults.AuthenticationScheme, _ => { });
+        //    return AddBasic<TAuthService>(builder);
+        //}
+
+
+        public static AuthenticationBuilder AddNuget<TAuthService>(this AuthenticationBuilder builder, string authenticationScheme, Action<NugetAuthenticationOptions> configureOptions)
+               where TAuthService : class, ICredentialsValidationService
+        {
+            builder.Services.AddSingleton<IPostConfigureOptions<NugetAuthenticationOptions>, NugetAuthenticationPostConfigureOptions>();
+            builder.Services.AddTransient<ICredentialsValidationService, TAuthService>();
+
+            return builder.AddScheme<NugetAuthenticationOptions, NugetAuthenticationHandler>(
+                authenticationScheme, configureOptions);
+        }
+
+
+
+        public static AuthenticationBuilder AddNuget(this AuthenticationBuilder builder, Func<ICredentials,Task<bool>> credentialsValidation)
+        {
+            builder.Services.AddSingleton<IPostConfigureOptions<NugetAuthenticationOptions>, NugetAuthenticationPostConfigureOptions>();
+            builder.Services.AddSingleton<ICredentialsValidationService>(new CredentialsValidationService(credentialsValidation));
+
+            return builder.AddScheme<NugetAuthenticationOptions, NugetAuthenticationHandler>("Basic", (opt) =>
+            {
+                Debug.WriteLine(opt);
+            });
+        }
+
+         
+
+
+    }
+
+
     public static class IServiceCollectionExtensions
     {
         public static IServiceCollection ConfigureBaGet(
@@ -69,7 +128,11 @@ namespace BaGet.Extensions
 
             services.AddStorageProviders();
             services.AddSearchProviders();
-            services.AddAuthenticationProviders();
+
+            //we need better naming to distinguish Api Key authentication (push)  from feed Authentication (pull)
+            services.AddAuthenticationProviders(); //API-Key
+
+            services.AddNugetAuthentication((cred) => Task.FromResult(true));
 
             return services;
         }
@@ -299,8 +362,7 @@ namespace BaGet.Extensions
 
         public static IServiceCollection AddAuthenticationProviders(this IServiceCollection services)
         {
-            services.AddTransient<IAuthenticationService, ApiKeyAuthenticationService>();
-
+            services.AddTransient<BaGet.Core.Services.IAuthenticationService, ApiKeyAuthenticationService>();
             return services;
         }
     }
