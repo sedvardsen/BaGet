@@ -7,16 +7,16 @@ namespace BaGet.Core.Services
 
     public class CredentialsValidationService : ICredentialsValidationService
     {
-        private readonly Func<ICredentials, Task<bool>> Callback;
+        private readonly Func<ICredentials, string, Task<bool>> Callback;
 
-        public CredentialsValidationService(Func<ICredentials, Task<bool>> callback)
+        public CredentialsValidationService(Func<ICredentials, string, Task<bool>> callback)
         {
             Callback = callback ?? throw new ArgumentNullException(nameof(callback));
         }
 
-         Task<bool> ICredentialsValidationService.IsValid(ICredentials credentials)
+         Task<bool> ICredentialsValidationService.IsValid(ICredentials credentials, string httpMethod)
         {
-            return Callback(credentials);
+            return Callback(credentials,httpMethod);
         }
 
     }
@@ -30,7 +30,7 @@ namespace BaGet.Core.Services
         {
            // Users = new NetworkCredential[] { new NetworkCredential("dummyUsername", "dummyPassword")};
         }
-        public Task<bool> IsValid(ICredentials credential)
+        public Task<bool> IsValid(ICredentials credential, string httpMethod = null)
         {
             if (credential == null)
             {

@@ -10,7 +10,8 @@ namespace BaGet.Core.Configuration
         /// </summary>
         public string ApiKey { get; set; }
 
-        public string RestrictedToAzureDevopsOrg { get; set; }
+        public string RestrictReadToAzureDevopsOrgs { get; set; }
+        public string RestrictWriteToAzureDevopsProjects { get; set; }
 
         /// <summary>
         /// The application root URL for usage in reverse proxy scenarios.

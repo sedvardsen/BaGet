@@ -41,6 +41,8 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using BaGet.Core.Services;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace BaGet.Extensions
 {
@@ -50,7 +52,7 @@ namespace BaGet.Extensions
     public static class NugetAuthenticationExtensions
     {
 
-        public static AuthenticationBuilder AddNugetAuthentication(this IServiceCollection services, Func<ICredentials, Task<bool>> credentialsValidation)
+        public static AuthenticationBuilder AddNugetAuthentication(this IServiceCollection services, Func<ICredentials, string, Task<bool>> credentialsValidation)
         {
             return services.AddAuthentication("Basic").AddNuget(credentialsValidation);
         }
@@ -76,12 +78,12 @@ namespace BaGet.Extensions
 
 
 
-        public static AuthenticationBuilder AddNuget(this AuthenticationBuilder builder, Func<ICredentials,Task<bool>> credentialsValidation)
+        public static AuthenticationBuilder AddNuget(this AuthenticationBuilder builder, Func<ICredentials, string, Task<bool>> credentialsValidation)
         {
             builder.Services.AddSingleton<IPostConfigureOptions<NugetAuthenticationOptions>, NugetAuthenticationPostConfigureOptions>();
             builder.Services.AddSingleton<ICredentialsValidationService>(new CredentialsValidationService(credentialsValidation));
 
-            return builder.AddScheme<NugetAuthenticationOptions, NugetAuthenticationHandler>("Basic", (opt) =>
+            return builder.AddScheme<NugetAuthenticationOptions, AzureDevopsAuthenticationHandler>("Basic", (opt) =>
             {
                 Debug.WriteLine(opt);
             });
@@ -100,6 +102,7 @@ namespace BaGet.Extensions
             IConfiguration configuration,
             bool httpServices = false)
         {
+            services.AddLazyCache();
             services.ConfigureAndValidate<BaGetOptions>(configuration);
             services.ConfigureAndValidate<SearchOptions>(configuration.GetSection(nameof(BaGetOptions.Search)));
             services.ConfigureAndValidate<MirrorOptions>(configuration.GetSection(nameof(BaGetOptions.Mirror)));
@@ -132,30 +135,51 @@ namespace BaGet.Extensions
 
             //we need better naming to distinguish Api Key authentication (push)  from feed Authentication (pull)
             services.AddAuthenticationProviders(); //API-Key
-            var restrictToAzureDevopsOrg = configuration[nameof(BaGetOptions.RestrictedToAzureDevopsOrg)];
-            if (string.IsNullOrEmpty(restrictToAzureDevopsOrg))
+            var restrictReadToAzureDevopsOrgs = (configuration[nameof(BaGetOptions.RestrictReadToAzureDevopsOrgs)] ?? string.Empty)
+                .Split(new[] { ',', ';' },StringSplitOptions.RemoveEmptyEntries);
+            var restrictWriteToAzureDevopsProjects = (configuration[nameof(BaGetOptions.RestrictWriteToAzureDevopsProjects)] ?? string.Empty)
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (restrictReadToAzureDevopsOrgs.Any() == false && restrictWriteToAzureDevopsProjects.Any() == false)
             {
-                services.AddNugetAuthentication((cred) => Task.FromResult(true));
+                services.AddNugetAuthentication((cred, httpMethod) => Task.FromResult(true));
             }
             else
             {
-                services.AddNugetAuthentication((cred) => checkAccessInOrg(cred, restrictToAzureDevopsOrg));
+                services.AddNugetAuthentication((cred, httpMethod) => checkAccessInOrg(cred, httpMethod, restrictReadToAzureDevopsOrgs, restrictWriteToAzureDevopsProjects));
             }
             
 
             return services;
         }
 
-        private static async Task<bool> checkAccessInOrg(ICredentials cred, string restrictToAzureDevopsOrg)
+        private static async Task<bool> checkAccessInOrg(ICredentials cred, string httpMethod, string[] restrictReadToAzureDevopsOrgs, string[] restrictWriteToAzureDevopsProjects)
         {
             var client = new HttpClient();
             var credentials = cred.GetCredential(new Uri("http://tempuri.org"), "Basic");
             var byteArray = Encoding.ASCII.GetBytes($"notused:{credentials.Password}");
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
 
-            var call = await client.GetAsync($"https://dev.azure.com/{restrictToAzureDevopsOrg}/_apis/build/builds?api-version=5.0&$top=0");
-            
-            return call.IsSuccessStatusCode;
+            if (httpMethod == "GET" || httpMethod == "HEAD")
+            {
+                foreach (var reader in restrictReadToAzureDevopsOrgs)
+                {
+                    var res = await client.GetAsync($"https://dev.azure.com/{reader}/_apis/projects?api-version=5.0&$top=0");
+                    if (res.IsSuccessStatusCode) return true;
+
+                }
+            }
+            else
+            {
+                foreach (var writer in restrictWriteToAzureDevopsProjects)
+                {
+                    var res = await client.GetAsync($"https://dev.azure.com/{writer}/_apis/build/builds?api-version=5.0&$top=0");
+                    if (res.IsSuccessStatusCode) return true;
+
+                }
+            }
+
+            return false;
         }
 
         public static IServiceCollection AddBaGetContext(this IServiceCollection services)

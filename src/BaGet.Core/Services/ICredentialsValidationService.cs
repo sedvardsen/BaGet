@@ -5,6 +5,6 @@ namespace BaGet.Core.Services
 {
     public interface ICredentialsValidationService
     {
-        Task<bool> IsValid(ICredentials credentials);
+        Task<bool> IsValid(ICredentials credentials, string httpMethod = null);
     }
 }
